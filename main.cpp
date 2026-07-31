@@ -7,11 +7,12 @@
 #include <cctype>
 #include <algorithm>
 #include "sqlite3.h"
-
+//c++17= kuruluma gerek yok ; kütüphaneleri bütün işletim sistemlerinde aynı şekilde  çalışıyor 
 namespace fs = std::filesystem;
+//SQLite projeye dahil edilen dosyalarla basitce veri saklayan veritabanı , birden fazla etiketleme sunar.
 using namespace std;
 
-// TETIKLEYICI KELIME LISTESI
+// TETIKLEYICI KELIME LISTESI (risk analizi)
 static const vector< pair<string, string>> triggerWords = {
     {"sifre", "DUSUK"},
     {"parola", "DUSUK"},
@@ -26,7 +27,7 @@ static const vector< pair<string, string>> triggerWords = {
     {"confidential", "ORTA"}
 };
 
-// YARDIMCI FONK
+
 
 // Kucuk harfe cevirme (karsilastirma icin)
 string toLower(const string& s) {
@@ -60,10 +61,10 @@ bool isTextReadable(const string& extension) {
         || extension == ".xml" || extension == ".log" || extension == ".md";
 }
 
-// ==============================================================
+
 // ANA MANTIK: Bir dosya icin TUM etiketleri hesaplayip
 // tek bir string olarak dondurur. Ornek sonuc: "dokuman, ozel_isim"
-// ==============================================================
+
 string hesaplaEtiketler(const string& filename, const string& extension) {
     string etiketler = "";
 
@@ -84,10 +85,9 @@ string hesaplaEtiketler(const string& filename, const string& extension) {
     return etiketler;
 }
 
-// ==============================================================
 // ICERIK TARAMASI: dosyanin icini tetikleyici kelimelere karsi tarar
 // En yuksek risk seviyesini ve bulunan kelimeleri dondurur
-// ==============================================================
+
 struct TaramaSonucu {
     string riskSeviyesiStr = "YOK";
     string bulunanKelimeler = "";
@@ -140,12 +140,11 @@ string formatTime(fs::file_time_type ftime) {
     return timeStr;
 }
 
-// ==============================================================
+
 // VERITABANI: TEK bir tablo olusturuyoruz (files).
 // Etiketler ayri tabloda degil, "tags" adli TEK bir metin kolonunda,
 // virgulle ayrilmis sekilde tutuluyor. Boylece ekstra iliski
 // tablosuna gerek kalmiyor.
-// ==============================================================
 bool veritabaniHazirla(sqlite3* db) {
     const char* sql =
         "CREATE TABLE IF NOT EXISTS files ("
@@ -155,9 +154,9 @@ bool veritabaniHazirla(sqlite3* db) {
         "extension TEXT,"
         "size_kb REAL,"
         "modified_date TEXT,"
-        "tags TEXT,"              // ornek deger: "dokuman, ozel_isim"
-        "risk_level TEXT,"        // ornek deger: "DUSUK" / "ORTA" / "YUKSEK" / "YOK"
-        "found_keywords TEXT"     // ornek deger: "sifre, gizli"
+        "tags TEXT,"              
+        "risk_level TEXT,"        
+        "found_keywords TEXT"    
         ");";
 
     char* hataMesaji = nullptr;
@@ -169,13 +168,13 @@ bool veritabaniHazirla(sqlite3* db) {
     return true;
 }
 
-// Tek bir dosyanin tum bilgilerini veritabanina ekler.
+// Tek bir dosyanin tum bilgilerini veritabanina ekler.SQLite kullnama şartı   
 // "?" isaretleri, degerlerin guvenli sekilde yerlestirilecegi yerler.
 void dosyaEkle(sqlite3* db, const string& filename, const string& filepath,
                const string& extension, double sizeKB, const string& modDate,
                const string& tags, const string& risk, const string& kelimeler) {
 
-    const char* sql =
+    const char* sql =//files tablosuna şu kolonlara şu değerleri ekle
         "INSERT INTO files (filename, filepath, extension, size_kb, modified_date, tags, risk_level, found_keywords) "
         "VALUES (?, ?, ?, ?, ?, ?, ?, ?);";
 
@@ -196,9 +195,9 @@ void dosyaEkle(sqlite3* db, const string& filename, const string& filepath,
     sqlite3_finalize(stmt);   // temizle
 }
 
-// ==============================================================
+
 // ANA PROGRAM
-// ==============================================================
+
 int main(int argc, char* argv[]) {
 
     // 1. Kullanici klasor yolu vermis mi kontrol et
